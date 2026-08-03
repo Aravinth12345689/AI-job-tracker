@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}My Resume{% endblock %}
+
+{% block content %}
+<h1>My Resume</h1>
+<p class="subtitle">Paste your resume as plain text here. This is used by the AI to calculate match scores against job descriptions.</p>
+
+<form method="POST" class="form-card">
+    <textarea name="resume_text" rows="20" placeholder="Paste your resume text here...">{{ resume }}</textarea>
+    <button type="submit" class="btn-primary">Save Resume</button>
+</form>
+{% endblock %}

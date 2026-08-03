@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Job Tracker{% endblock %}
+
+{% block content %}
+<h1>Your Applications</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">Total Applied</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.interviews }}</div>
+        <div class="stat-label">Interviews</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.offers }}</div>
+        <div class="stat-label">Offers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.interview_rate }}%</div>
+        <div class="stat-label">Interview Rate</div>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <a href="{{ url_for('dashboard', status='All') }}" class="filter-btn {% if current_filter == 'All' %}active{% endif %}">All</a>
+    <a href="{{ url_for('dashboard', status='Applied') }}" class="filter-btn {% if current_filter == 'Applied' %}active{% endif %}">Applied</a>
+    <a href="{{ url_for('dashboard', status='Interview') }}" class="filter-btn {% if current_filter == 'Interview' %}active{% endif %}">Interview</a>
+    <a href="{{ url_for('dashboard', status='Offer') }}" class="filter-btn {% if current_filter == 'Offer' %}active{% endif %}">Offer</a>
+    <a href="{{ url_for('dashboard', status='Rejected') }}" class="filter-btn {% if current_filter == 'Rejected' %}active{% endif %}">Rejected</a>
+</div>
+
+{% if applications|length == 0 %}
+<div class="empty-state">
+    <p>No applications yet. <a href="{{ url_for('add_application') }}">Add your first one</a>.</p>
+</div>
+{% else %}
+<div class="applications-list">
+    {% for app in applications %}
+    <div class="app-card status-{{ app.status|lower }}">
+        <div class="app-card-header">
+            <div>
+                <h3>{{ app.role }}</h3>
+                <p class="company-name">{{ app.company }}</p>
+            </div>
+            <span class="status-badge status-{{ app.status|lower }}">{{ app.status }}</span>
+        </div>
+        <p class="app-date">Applied: {{ app.date_applied.strftime('%d %b %Y') }}</p>
+        {% if app.match_score %}
+        <p class="match-score">Match Score: <strong>{{ app.match_score }}%</strong></p>
+        {% endif %}
+        <div class="app-card-actions">
+            <a href="{{ url_for('application_detail', app_id=app.id) }}" class="btn-small">View / AI Tools</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

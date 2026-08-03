@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Add Application{% endblock %}
+
+{% block content %}
+<h1>Add New Application</h1>
+
+<form method="POST" class="form-card">
+    <label>Company Name</label>
+    <input type="text" name="company" required placeholder="e.g. Google">
+
+    <label>Role</label>
+    <input type="text" name="role" required placeholder="e.g. Software Engineer Intern">
+
+    <label>Date Applied</label>
+    <input type="date" name="date_applied" required>
+
+    <label>Status</label>
+    <select name="status">
+        <option value="Applied">Applied</option>
+        <option value="Interview">Interview</option>
+        <option value="Offer">Offer</option>
+        <option value="Rejected">Rejected</option>
+    </select>
+
+    <label>Job Link (optional)</label>
+    <input type="url" name="job_link" placeholder="https://...">
+
+    <label>Job Description (paste here for AI match scoring)</label>
+    <textarea name="job_description" rows="8" placeholder="Paste the full job description here..."></textarea>
+
+    <label>Notes (optional)</label>
+    <textarea name="notes" rows="3" placeholder="Any personal notes..."></textarea>
+
+    <button type="submit" class="btn-primary">Save Application</button>
+</form>
+{% endblock %}

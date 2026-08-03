@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ app.role }} - {{ app.company }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+
+<h1>{{ app.role }}</h1>
+<p class="company-name-large">{{ app.company }}</p>
+
+<div class="detail-grid">
+    <div class="detail-main">
+        <div class="card">
+            <h3>Application Info</h3>
+            <p><strong>Applied on:</strong> {{ app.date_applied.strftime('%d %b %Y') }}</p>
+            {% if app.job_link %}<p><strong>Job Link:</strong> <a href="{{ app.job_link }}" target="_blank">{{ app.job_link }}</a></p>{% endif %}
+            {% if app.notes %}<p><strong>Notes:</strong> {{ app.notes }}</p>{% endif %}
+
+            <form method="POST" action="{{ url_for('update_status', app_id=app.id) }}" class="status-form">
+                <label>Update Status:</label>
+                <select name="status" onchange="this.form.submit()">
+                    <option value="Applied" {% if app.status == 'Applied' %}selected{% endif %}>Applied</option>
+                    <option value="Interview" {% if app.status == 'Interview' %}selected{% endif %}>Interview</option>
+                    <option value="Offer" {% if app.status == 'Offer' %}selected{% endif %}>Offer</option>
+                    <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </form>
+        </div>
+
+        {% if app.job_description %}
+        <div class="card">
+            <h3>Job Description</h3>
+            <p class="jd-text">{{ app.job_description }}</p>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h3>🗑 Danger Zone</h3>
+            <form method="POST" action="{{ url_for('delete_application', app_id=app.id) }}" onsubmit="return confirm('Delete this application?');">
+                <button type="submit" class="btn-danger">Delete Application</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="detail-sidebar">
+        <div class="card ai-card">
+            <h3>🤖 AI Resume Match</h3>
+            {% if not resume %}
+            <p class="warning-text">Add your resume text on the <a href="{{ url_for('resume_page') }}">Resume page</a> first.</p>
+            {% else %}
+            <button id="matchBtn" class="btn-ai" onclick="runMatchScore({{ app.id }})">Analyze Match</button>
+            <div id="matchResult" class="ai-result">
+                {% if app.match_score %}
+                <div class="score-circle">{{ app.match_score }}%</div>
+                <p><strong>Matched:</strong> {{ app.matched_skills|join(', ') }}</p>
+                <p><strong>Missing:</strong> {{ app.missing_skills|join(', ') }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card ai-card">
+            <h3>✉️ AI Follow-up Email</h3>
+            <button id="emailBtn" class="btn-ai" onclick="generateEmail({{ app.id }})">Generate Follow-up Email</button>
+            <div id="emailResult" class="ai-result"></div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
