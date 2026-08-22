@@ -30,15 +30,28 @@ else:
 
 
 def _call_gemini(prompt, max_tokens=500):
-    """Low-level helper that calls the free Gemini API and returns raw text."""
+    """Low-level helper that calls the free Gemini API and returns raw text.
+    Retries automatically if Google's servers are temporarily overloaded (503)."""
+    import time
     from google import genai
     client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-    response = client.models.generate_content(
-        model="gemini-flash-latest",
-        contents=prompt
-    )
-    return response.text
+    last_error = None
+    for attempt in range(4):  # try up to 4 times
+        try:
+            response = client.models.generate_content(
+                model="gemini-flash-latest",
+                contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            last_error = e
+            if "503" in str(e) or "UNAVAILABLE" in str(e):
+                time.sleep(2 * (attempt + 1))  # wait longer each retry: 2s, 4s, 6s, 8s
+                continue
+            raise  # some other error, don't retry, fail immediately
+
+    raise last_error
 
 
 def _extract_json(text):
