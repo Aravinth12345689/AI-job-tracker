@@ -3,12 +3,15 @@ ai_helper.py
 ------------
 This file handles all calls to the AI (LLM) API.
 
-Setup (FREE - Google Gemini API):
-1. Get a free API key from https://aistudio.google.com (no credit card needed)
-2. Set it as an environment variable before running the app:
-       export GEMINI_API_KEY="your-key-here"        (Mac/Linux)
-       $env:GEMINI_API_KEY="your-key-here"          (Windows PowerShell)
-3. Install the SDK: pip install google-genai
+Setup (FREE - Groq API):
+1. Get a free API key from https://console.groq.com (no credit card needed)
+2. Set it as an environment variable (permanently, via Windows Environment Variables):
+       Name:  GROQ_API_KEY
+       Value: your key (starts with gsk_...)
+3. Install the SDK: pip install groq
+
+Groq's free tier gives 14,400 requests/day on the model used here - far more
+than enough for a student project demo.
 
 If you don't have an API key yet, the functions below will return a
 clearly-labeled MOCK response so you can still demo the rest of your app
@@ -19,39 +22,27 @@ import os
 import json
 import re
 
-USE_MOCK = os.environ.get("GEMINI_API_KEY") is None
+USE_MOCK = os.environ.get("GROQ_API_KEY") is None
 
-# --- DEBUG: prints to your terminal when the app starts, so we can see what's happening ---
 if USE_MOCK:
-    print("⚠️  GEMINI_API_KEY not found in environment — using MOCK responses.")
+    print("WARNING: GROQ_API_KEY not found in environment - using MOCK responses.")
 else:
-    key_preview = os.environ.get("GEMINI_API_KEY", "")[:8]
-    print(f"✅ GEMINI_API_KEY found (starts with '{key_preview}...') — using REAL AI calls.")
+    key_preview = os.environ.get("GROQ_API_KEY", "")[:8]
+    print(f"GROQ_API_KEY found (starts with {key_preview}...) - using REAL AI calls.")
 
 
-def _call_gemini(prompt, max_tokens=500):
-    """Low-level helper that calls the free Gemini API and returns raw text.
-    Retries automatically if Google's servers are temporarily overloaded (503)."""
-    import time
-    from google import genai
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+def _call_groq(prompt, max_tokens=500):
+    """Low-level helper that calls the free Groq API and returns raw text."""
+    from groq import Groq
+    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-    last_error = None
-    for attempt in range(4):  # try up to 4 times
-        try:
-            response = client.models.generate_content(
-                model="gemini-flash-latest",
-                contents=prompt
-            )
-            return response.text
-        except Exception as e:
-            last_error = e
-            if "503" in str(e) or "UNAVAILABLE" in str(e):
-                time.sleep(2 * (attempt + 1))  # wait longer each retry: 2s, 4s, 6s, 8s
-                continue
-            raise  # some other error, don't retry, fail immediately
-
-    raise last_error
+    response = client.chat.completions.create(
+    model="openai/gpt-oss-20b",
+    max_tokens=max(max_tokens, 1024),
+    reasoning_effort="low",
+    messages=[{"role": "user", "content": prompt}]
+)
+    return response.choices[0].message.content
 
 
 def _extract_json(text):
@@ -75,7 +66,7 @@ def get_match_score(resume_text, job_description):
             "match_score": 72,
             "matched_skills": ["Python", "Communication", "Problem Solving"],
             "missing_skills": ["Docker", "AWS"],
-            "suggestions": "[MOCK RESPONSE - set the GEMINI_API_KEY environment variable to get real, "
+            "suggestions": "[MOCK RESPONSE - set the GROQ_API_KEY environment variable to get real, "
                             "varying results based on your actual resume and job description] "
                             "Consider adding cloud deployment experience to your resume.",
             "mock": True
@@ -99,7 +90,7 @@ Respond ONLY with a valid JSON object (no other text, no markdown fences) in exa
 """
 
     try:
-        raw = _call_gemini(prompt, max_tokens=600)
+        raw = _call_groq(prompt, max_tokens=600)
         return _extract_json(raw)
     except Exception as e:
         return {"error": f"AI call failed: {str(e)}"}
@@ -116,7 +107,7 @@ def get_followup_email(company, role, days_since_applied):
     if USE_MOCK:
         return {
             "subject": f"Following up on my application - {role}",
-            "body": (f"[MOCK RESPONSE - set the GEMINI_API_KEY environment variable for a real AI-generated email]\n\n"
+            "body": (f"[MOCK RESPONSE - set the GROQ_API_KEY environment variable for a real AI-generated email]\n\n"
                      f"Dear Hiring Manager,\n\nI hope this message finds you well. I applied for the {role} "
                      f"position at {company} {days_since_applied} days ago and wanted to follow up on my application "
                      f"status. I remain very interested in this opportunity and would welcome the chance to discuss "
@@ -139,7 +130,7 @@ Respond ONLY with a valid JSON object (no other text, no markdown fences) in exa
 """
 
     try:
-        raw = _call_gemini(prompt, max_tokens=400)
+        raw = _call_groq(prompt, max_tokens=400)
         return _extract_json(raw)
     except Exception as e:
         return {"error": f"AI call failed: {str(e)}"}
