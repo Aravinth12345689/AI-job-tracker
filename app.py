@@ -123,6 +123,13 @@ def delete_application(app_id):
     return redirect(url_for("dashboard"))
 
 
+@app.route("/clear-all", methods=["POST"])
+def clear_all_applications():
+    Application.query.delete()
+    db.session.commit()
+    return redirect(url_for("dashboard"))
+
+
 @app.route("/resume", methods=["GET", "POST"])
 def resume_page():
     if request.method == "POST":
@@ -138,7 +145,6 @@ def resume_page():
 def match_score(app_id):
     """
     Calls the AI model to score how well the resume matches the job description.
-    Requires ANTHROPIC_API_KEY environment variable to be set.
     """
     from ai_helper import get_match_score
 
