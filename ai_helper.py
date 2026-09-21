@@ -38,8 +38,7 @@ def _call_groq(prompt, max_tokens=500):
 
     response = client.chat.completions.create(
     model="openai/gpt-oss-20b",
-    max_tokens=max(max_tokens, 1024),
-    reasoning_effort="low",
+    max_tokens=max(max_tokens, 2048),
     messages=[{"role": "user", "content": prompt}]
 )
     return response.choices[0].message.content
